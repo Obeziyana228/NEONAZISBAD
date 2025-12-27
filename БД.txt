@@ -1,0 +1,515 @@
+CREATE TABLE warehouses (
+    warehouse_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    address TEXT NOT NULL,
+    description TEXT
+);
+CREATE TABLE storage_zones (
+    zone_id SERIAL PRIMARY KEY,
+    warehouse_id INT NOT NULL,
+    zone_code VARCHAR(50) NOT NULL,
+    description TEXT,
+
+    CONSTRAINT fk_zone_warehouse
+        FOREIGN KEY (warehouse_id)
+        REFERENCES warehouses (warehouse_id)
+        ON DELETE CASCADE
+);
+CREATE TABLE product_categories (
+    category_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT
+);
+CREATE TABLE products (
+    product_id SERIAL PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    category_id INT NOT NULL,
+    article VARCHAR(50) UNIQUE NOT NULL,
+    unit VARCHAR(20) NOT NULL,
+    min_stock INT DEFAULT 0 CHECK (min_stock >= 0),
+
+    CONSTRAINT fk_product_category
+        FOREIGN KEY (category_id)
+        REFERENCES product_categories (category_id)
+);
+CREATE TABLE suppliers (
+    supplier_id SERIAL PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    contact_person VARCHAR(100),
+    phone VARCHAR(30),
+    email VARCHAR(100)
+);
+CREATE TABLE deliveries (
+    delivery_id SERIAL PRIMARY KEY,
+    supplier_id INT NOT NULL,
+    warehouse_id INT NOT NULL,
+    delivery_date DATE NOT NULL,
+    status VARCHAR(30) NOT NULL,
+
+    CONSTRAINT fk_delivery_supplier
+        FOREIGN KEY (supplier_id)
+        REFERENCES suppliers (supplier_id),
+
+    CONSTRAINT fk_delivery_warehouse
+        FOREIGN KEY (warehouse_id)
+        REFERENCES warehouses (warehouse_id)
+);
+CREATE TABLE delivery_items (
+    delivery_item_id SERIAL PRIMARY KEY,
+    delivery_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL CHECK (quantity > 0),
+    purchase_price NUMERIC(10,2) NOT NULL CHECK (purchase_price >= 0),
+
+    CONSTRAINT fk_item_delivery
+        FOREIGN KEY (delivery_id)
+        REFERENCES deliveries (delivery_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_item_product
+        FOREIGN KEY (product_id)
+        REFERENCES products (product_id)
+);
+CREATE TABLE stock_balances (
+    product_id INT NOT NULL,
+    warehouse_id INT NOT NULL,
+    zone_id INT NOT NULL,
+    quantity INT NOT NULL DEFAULT 0 CHECK (quantity >= 0),
+
+    PRIMARY KEY (product_id, warehouse_id, zone_id),
+
+    CONSTRAINT fk_stock_product
+        FOREIGN KEY (product_id)
+        REFERENCES products (product_id),
+
+    CONSTRAINT fk_stock_warehouse
+        FOREIGN KEY (warehouse_id)
+        REFERENCES warehouses (warehouse_id),
+
+    CONSTRAINT fk_stock_zone
+        FOREIGN KEY (zone_id)
+        REFERENCES storage_zones (zone_id)
+);
+CREATE TABLE shipments (
+    shipment_id SERIAL PRIMARY KEY,
+    warehouse_id INT NOT NULL,
+    shipment_date DATE NOT NULL,
+    recipient VARCHAR(150) NOT NULL,
+    status VARCHAR(30) NOT NULL,
+
+    CONSTRAINT fk_shipment_warehouse
+        FOREIGN KEY (warehouse_id)
+        REFERENCES warehouses (warehouse_id)
+);
+CREATE TABLE employees (
+    employee_id SERIAL PRIMARY KEY,
+    full_name VARCHAR(150) NOT NULL,
+    position VARCHAR(100) NOT NULL,
+    phone VARCHAR(30),
+    email VARCHAR(100)
+);
+--Склады
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (1, 'Склад №1', 'Москва ул. Ленина 1', 'Основной склад');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (2, 'Склад №2', 'Москва ул. Ленина 2', 'Резервный склад');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (3, 'Склад №3', 'Москва ул. Ленина 3', 'Склад бытовой техники');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (4, 'Склад №4', 'Москва ул. Ленина 4', 'Склад электроники');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (5, 'Склад №5', 'Москва ул. Ленина 5', 'Склад продуктов');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (6, 'Склад №6', 'Санкт-Петербург Невский 1', 'Региональный склад');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (7, 'Склад №7', 'Санкт-Петербург Невский 2', 'Региональный склад');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (8, 'Склад №8', 'Казань Баумана 1', 'Центральный склад');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (9, 'Склад №9', 'Казань Баумана 2', 'Временный склад');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (10, 'Склад №10', 'Екатеринбург Мира 1', 'Оптовый склад');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (11, 'Склад №11', 'Екатеринбург Мира 2', 'Склад мебели');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (12, 'Склад №12', 'Новосибирск Лесная 1', 'Склад стройматериалов');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (13, 'Склад №13', 'Новосибирск Лесная 2', 'Склад оборудования');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (14, 'Склад №14', 'Пермь Кирова 1', 'Склад комплектующих');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (15, 'Склад №15', 'Пермь Кирова 2', 'Локальный склад');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (16, 'Склад №16', 'Самара Гагарина 1', 'Склад запчастей');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (17, 'Склад №17', 'Самара Гагарина 2', 'Склад инструментов');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (18, 'Склад №18', 'Уфа Советская 1', 'Склад упаковки');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (19, 'Склад №19', 'Уфа Советская 2', 'Склад сырья');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (20, 'Склад №20', 'Тюмень Центральная 1', 'Основной склад');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (21, 'Склад №21', 'Тюмень Центральная 2', 'Резервный склад');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (22, 'Склад №22', 'Омск Ленина 10', 'Склад техники');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (23, 'Склад №23', 'Омск Ленина 11', 'Склад электроники');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (24, 'Склад №24', 'Томск Мира 5', 'Склад расходников');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (25, 'Склад №25', 'Томск Мира 6', 'Склад канцтоваров');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (26, 'Склад №26', 'Челябинск Победы 1', 'Склад металла');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (27, 'Склад №27', 'Челябинск Победы 2', 'Склад инструментов');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (28, 'Склад №28', 'Ижевск Заводская 1', 'Склад продукции');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (29, 'Склад №29', 'Ижевск Заводская 2', 'Склад полуфабрикатов');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (30, 'Склад №30', 'Воронеж Южная 1', 'Оптовый склад');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (31, 'Склад №31', 'Воронеж Южная 2', 'Склад мелкооптовый');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (32, 'Склад №32', 'Краснодар Северная 1', 'Склад продуктов');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (33, 'Склад №33', 'Краснодар Северная 2', 'Склад заморозки');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (34, 'Склад №34', 'Ростов Донская 1', 'Склад логистики');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (35, 'Склад №35', 'Ростов Донская 2', 'Транзитный склад');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (36, 'Склад №36', 'Волгоград Мира 3', 'Склад техники');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (37, 'Склад №37', 'Волгоград Мира 4', 'Склад мебели');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (38, 'Склад №38', 'Сочи Курортная 1', 'Курортный склад');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (39, 'Склад №39', 'Сочи Курортная 2', 'Склад снабжения');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (40, 'Склад №40', 'Анапа Морская 1', 'Склад продуктов');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (41, 'Склад №41', 'Анапа Морская 2', 'Резерв');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (42, 'Склад №42', 'Калуга Центральная 3', 'Локальный склад');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (43, 'Склад №43', 'Калуга Центральная 4', 'Временный склад');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (44, 'Склад №44', 'Тула Оружейная 1', 'Склад деталей');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (45, 'Склад №45', 'Тула Оружейная 2', 'Склад запчастей');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (46, 'Склад №46', 'Рязань Московская 1', 'Склад продукции');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (47, 'Склад №47', 'Рязань Московская 2', 'Склад комплектующих');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (48, 'Склад №48', 'Смоленск Победы 5', 'Основной склад');
+INSERT INTO public.warehouses (warehouse_id, name, address, description) VALUES (49, 'Склад №49', 'Смоленск Победы 6', 'Резерв');
+--зоны
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (1, 1, 'A1', 'Зона хранения А1');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (2, 2, 'A2', 'Зона хранения А2');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (3, 3, 'A3', 'Зона хранения А3');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (4, 4, 'A4', 'Зона хранения А4');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (5, 5, 'A5', 'Зона хранения А5');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (6, 6, 'A6', 'Зона хранения А6');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (7, 7, 'A7', 'Зона хранения А7');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (8, 8, 'A8', 'Зона хранения А8');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (9, 9, 'A9', 'Зона хранения А9');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (10, 10, 'A10', 'Зона хранения А10');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (11, 11, 'A11', 'Зона хранения А11');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (12, 12, 'A12', 'Зона хранения А12');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (13, 13, 'A13', 'Зона хранения А13');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (14, 14, 'A14', 'Зона хранения А14');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (15, 15, 'A15', 'Зона хранения А15');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (16, 16, 'A16', 'Зона хранения А16');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (17, 17, 'A17', 'Зона хранения А17');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (18, 18, 'A18', 'Зона хранения А18');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (19, 19, 'A19', 'Зона хранения А19');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (20, 20, 'A20', 'Зона хранения А20');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (21, 21, 'A21', 'Зона хранения А21');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (22, 22, 'A22', 'Зона хранения А22');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (23, 23, 'A23', 'Зона хранения А23');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (24, 24, 'A24', 'Зона хранения А24');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (25, 25, 'A25', 'Зона хранения А25');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (26, 26, 'A26', 'Зона хранения А26');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (27, 27, 'A27', 'Зона хранения А27');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (28, 28, 'A28', 'Зона хранения А28');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (29, 29, 'A29', 'Зона хранения А29');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (30, 30, 'A30', 'Зона хранения А30');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (31, 31, 'A31', 'Зона хранения А31');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (32, 32, 'A32', 'Зона хранения А32');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (33, 33, 'A33', 'Зона хранения А33');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (34, 34, 'A34', 'Зона хранения А34');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (35, 35, 'A35', 'Зона хранения А35');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (36, 36, 'A36', 'Зона хранения А36');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (37, 37, 'A37', 'Зона хранения А37');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (38, 38, 'A38', 'Зона хранения А38');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (39, 39, 'A39', 'Зона хранения А39');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (40, 40, 'A40', 'Зона хранения А40');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (41, 41, 'A41', 'Зона хранения А41');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (42, 42, 'A42', 'Зона хранения А42');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (43, 43, 'A43', 'Зона хранения А43');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (44, 44, 'A44', 'Зона хранения А44');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (45, 45, 'A45', 'Зона хранения А45');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (46, 46, 'A46', 'Зона хранения А46');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (47, 47, 'A47', 'Зона хранения А47');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (48, 48, 'A48', 'Зона хранения А48');
+INSERT INTO public.storage_zones (zone_id, warehouse_id, zone_code, description) VALUES (49, 49, 'A49', 'Зона хранения А49');
+--продуктовые категории
+INSERT INTO public.product_categories (category_id, name, description) VALUES (1, 'Электроника', 'Бытовая электроника');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (2, 'Бытовая техника', 'Крупная техника');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (3, 'Компьютеры', 'ПК и комплектующие');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (4, 'Мебель', 'Офисная мебель');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (5, 'Продукты', 'Пищевые товары');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (6, 'Инструменты', 'Ручные инструменты');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (7, 'Стройматериалы', 'Материалы для строительства');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (8, 'Одежда', 'Рабочая одежда');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (9, 'Обувь', 'Рабочая обувь');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (10, 'Канцтовары', 'Офисные товары');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (11, 'Запчасти', 'Автозапчасти');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (12, 'Освещение', 'Лампы и светильники');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (13, 'Сантехника', 'Смесители и трубы');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (14, 'Химия', 'Бытовая химия');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (15, 'Косметика', 'Средства ухода');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (16, 'Медтовары', 'Медицинские изделия');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (17, 'Игрушки', 'Детские товары');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (18, 'Спорт', 'Спортивные товары');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (19, 'Туризм', 'Туристическое снаряжение');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (20, 'Автоаксессуары', 'Товары для авто');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (21, 'Текстиль', 'Ткани и материалы');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (22, 'Упаковка', 'Коробки и пленка');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (23, 'Посуда', 'Кухонная посуда');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (24, 'Быт', 'Товары для дома');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (25, 'Сад', 'Садовый инвентарь');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (26, 'Рыбалка', 'Рыболовные товары');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (27, 'Охота', 'Охотничьи товары');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (28, 'Электрика', 'Кабели и автоматы');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (29, 'Металл', 'Металлопрокат');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (30, 'Пластик', 'Пластиковые изделия');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (31, 'Дерево', 'Деревянные изделия');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (32, 'Краски', 'ЛКМ');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (33, 'Крепеж', 'Болты и гайки');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (34, 'Шины', 'Автошины');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (35, 'Аккумуляторы', 'АКБ');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (36, 'Батарейки', 'Элементы питания');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (37, 'Системы безопасности', 'Камеры и датчики');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (38, 'Связь', 'Рации и телефоны');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (39, 'IT', 'Сетевое оборудование');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (40, 'Кухня', 'Кухонная техника');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (41, 'Офис', 'Офисное оборудование');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (42, 'Школьные товары', 'Для школы');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (43, 'Медоборудование', 'Оборудование');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (44, 'Фармацевтика', 'Лекарства');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (45, 'Товары для животных', 'Корма и аксессуары');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (46, 'Музыка', 'Инструменты');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (47, 'Фото', 'Фототехника');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (48, 'Видео', 'Видеотехника');
+INSERT INTO public.product_categories (category_id, name, description) VALUES (49, 'Разное', 'Прочие товары');
+--продукты
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (1, 'Телевизор Samsung', 1, 'TV001', 'шт', 5);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (2, 'Холодильник LG', 2, 'FR002', 'шт', 3);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (3, 'Ноутбук HP', 3, 'NB003', 'шт', 10);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (4, 'Стол офисный', 4, 'TB004', 'шт', 7);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (5, 'Молоко 1л', 5, 'ML005', 'шт', 50);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (6, 'Молоток', 6, 'HM006', 'шт', 20);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (7, 'Цемент 25кг', 7, 'CM007', 'меш', 30);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (8, 'Куртка рабочая', 8, 'JK008', 'шт', 15);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (9, 'Ботинки рабочие', 9, 'BT009', 'пар', 10);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (10, 'Бумага А4', 10, 'PP010', 'упак', 40);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (11, 'Фильтр масляный', 11, 'OF011', 'шт', 25);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (12, 'Лампа LED', 12, 'LP012', 'шт', 100);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (13, 'Смеситель', 13, 'SM013', 'шт', 10);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (14, 'Моющее средство', 14, 'CL014', 'л', 20);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (15, 'Шампунь', 15, 'SH015', 'шт', 15);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (16, 'Перчатки мед', 16, 'MD016', 'упак', 30);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (17, 'Конструктор', 17, 'TG017', 'шт', 10);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (18, 'Мяч футбольный', 18, 'FB018', 'шт', 5);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (19, 'Палатка', 19, 'TN019', 'шт', 2);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (20, 'Коврики авто', 20, 'CM020', 'комп', 5);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (21, 'Ткань хлопок', 21, 'TX021', 'м', 100);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (22, 'Коробка картонная', 22, 'BX022', 'шт', 200);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (23, 'Кастрюля', 23, 'PN023', 'шт', 10);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (24, 'Ведро', 24, 'BK024', 'шт', 15);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (25, 'Лопата', 25, 'SH025', 'шт', 10);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (26, 'Удочка', 26, 'RD026', 'шт', 3);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (27, 'Нож охотничий', 27, 'KN027', 'шт', 2);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (28, 'Кабель ВВГ', 28, 'CB028', 'м', 100);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (29, 'Лист стальной', 29, 'ST029', 'кг', 500);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (30, 'Труба ПВХ', 30, 'PV030', 'м', 50);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (31, 'Доска', 31, 'WD031', 'м3', 10);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (32, 'Краска белая', 32, 'PT032', 'л', 20);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (33, 'Болты М8', 33, 'BL033', 'кг', 30);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (34, 'Шина R16', 34, 'TR034', 'шт', 8);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (35, 'Аккумулятор 60Ач', 35, 'AK035', 'шт', 6);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (36, 'Батарейки AA', 36, 'BT036', 'упак', 50);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (37, 'Камера видеонабл.', 37, 'CM037', 'шт', 4);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (38, 'Рация', 38, 'RC038', 'шт', 5);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (39, 'Коммутатор', 39, 'SW039', 'шт', 2);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (40, 'Микроволновка', 40, 'MW040', 'шт', 3);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (41, 'Принтер', 41, 'PR041', 'шт', 2);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (42, 'Тетради', 42, 'NB042', 'упак', 30);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (43, 'Тонометр', 43, 'TM043', 'шт', 2);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (44, 'Анальгин', 44, 'AN044', 'упак', 20);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (45, 'Корм для собак', 45, 'DG045', 'кг', 40);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (46, 'Гитара', 46, 'GT046', 'шт', 1);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (47, 'Фотоаппарат', 47, 'PH047', 'шт', 2);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (48, 'Видеокамера', 48, 'VC048', 'шт', 1);
+INSERT INTO public.products (product_id, name, category_id, article, unit, min_stock) VALUES (49, 'Прочий товар', 49, 'OT050', 'шт', 5);
+-- suppliers
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (1, 'ООО ТехСнаб', 'Иванов И.И.', '-896.0', 'info@techsnab.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (2, 'ООО ЭлектроМир', 'Петров П.П.', '-897.0', 'contact@electromir.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (3, 'ООО МебельТорг', 'Сидоров С.С.', '-898.0', 'mail@mebeltorg.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (4, 'ООО ПродуктСервис', 'Кузнецов К.К.', '-899.0', 'sales@food.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (5, 'ООО Инструмент+', 'Смирнов А.А.', '-900.0', 'info@tools.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (6, 'ООО СтройМаркет', 'Орлов О.О.', '-901.0', 'order@stroy.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (7, 'ООО ТехноОпт', 'Васильев В.В.', '-902.0', 'tech@opt.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (8, 'ООО Комплект', 'Николаев Н.Н.', '-903.0', 'k@komplekt.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (9, 'ООО Электра', 'Федоров Ф.Ф.', '-904.0', 'e@electra.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (10, 'ООО СнабПлюс', 'Морозов М.М.', '-905.0', 'snab@plus.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (11, 'ООО ОптСклад', 'Волков В.В.', '-906.0', 'opt@sklad.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (12, 'ООО Альфа', 'Алексеев А.А.', '-907.0', 'alpha@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (13, 'ООО Бета', 'Белов Б.Б.', '-908.0', 'beta@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (14, 'ООО Гамма', 'Громов Г.Г.', '-909.0', 'gamma@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (15, 'ООО Дельта', 'Дмитриев Д.Д.', '-910.0', 'delta@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (16, 'ООО Омега', 'Осипов О.О.', '-911.0', 'omega@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (17, 'ООО Сфера', 'Сафонов С.С.', '-912.0', 'sfera@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (18, 'ООО Поставка', 'Панин П.П.', '-913.0', 'post@avka.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (19, 'ООО Логистик', 'Лебедев Л.Л.', '-914.0', 'log@ist.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (20, 'ООО ТрансСнаб', 'Титов Т.Т.', '-915.0', 'trans@snab.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (21, 'ООО Вектор', 'Воронов В.В.', '-916.0', 'vector@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (22, 'ООО Горизонт', 'Гаврилов Г.Г.', '-917.0', 'horiz@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (23, 'ООО Ресурс', 'Романов Р.Р.', '-918.0', 'res@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (24, 'ООО Экспресс', 'Егоров Е.Е.', '-919.0', 'exp@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (25, 'ООО РегионСнаб', 'Рыбаков Р.Р.', '-920.0', 'reg@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (26, 'ООО Север', 'Северин С.С.', '-921.0', 'north@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (27, 'ООО Юг', 'Юдин Ю.Ю.', '-922.0', 'south@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (28, 'ООО Восток', 'Власов В.В.', '-923.0', 'east@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (29, 'ООО Запад', 'Зуев З.З.', '-924.0', 'west@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (30, 'ООО Магнит', 'Макаров М.М.', '-925.0', 'mag@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (31, 'ООО Прогресс', 'Прохоров П.П.', '-926.0', 'prog@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (32, 'ООО Союз', 'Соколов С.С.', '-927.0', 'soyuz@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (33, 'ООО Стандарт', 'Степанов С.С.', '-928.0', 'std@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (34, 'ООО Партнер', 'Поляков П.П.', '-929.0', 'partner@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (35, 'ООО Контакт', 'Крылов К.К.', '-930.0', 'contact@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (36, 'ООО Баланс', 'Быков Б.Б.', '-931.0', 'bal@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (37, 'ООО Система', 'Семенов С.С.', '-932.0', 'sys@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (38, 'ООО Тандем', 'Тарасов Т.Т.', '-933.0', 'tan@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (39, 'ООО Фокус', 'Фролов Ф.Ф.', '-934.0', 'focus@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (40, 'ООО Прайм', 'Пименов П.П.', '-935.0', 'prime@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (41, 'ООО Сток', 'Сычев С.С.', '-936.0', 'stock@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (42, 'ООО Бизнес', 'Борисов Б.Б.', '-937.0', 'biz@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (43, 'ООО Профи', 'Прокофьев П.П.', '-938.0', 'pro@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (44, 'ООО Актив', 'Антонов А.А.', '-939.0', 'act@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (45, 'ООО Лидер', 'Лазарев Л.Л.', '-940.0', 'lead@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (46, 'ООО Формат', 'Фомин Ф.Ф.', '-941.0', 'form@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (47, 'ООО Гарант', 'Гусев Г.Г.', '-942.0', 'gar@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (48, 'ООО Контур', 'Калинин К.К.', '-943.0', 'cont@mail.ru');
+INSERT INTO public.suppliers (supplier_id, name, contact_person, phone, email) VALUES (49, 'ООО Элемент', 'Елисеев Е.Е.', '-944.0', 'el@mail.ru');
+--deliveries
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (1, 1, 1, '2024-01-01', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (2, 2, 2, '2024-01-02', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (3, 3, 3, '2024-01-03', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (4, 4, 4, '2024-01-04', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (5, 5, 5, '2024-01-05', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (6, 6, 6, '2024-01-06', 'В обработке');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (7, 7, 7, '2024-01-07', 'В обработке');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (8, 8, 8, '2024-01-08', 'В обработке');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (9, 9, 9, '2024-01-09', 'В обработке');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (10, 10, 10, '2024-01-10', 'В обработке');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (11, 11, 11, '2024-01-11', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (12, 12, 12, '2024-01-12', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (13, 13, 13, '2024-01-13', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (14, 14, 14, '2024-01-14', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (15, 15, 15, '2024-01-15', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (16, 16, 16, '2024-01-16', 'Ожидается');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (17, 17, 17, '2024-01-17', 'Ожидается');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (18, 18, 18, '2024-01-18', 'Ожидается');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (19, 19, 19, '2024-01-19', 'Ожидается');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (20, 20, 20, '2024-01-20', 'Ожидается');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (21, 21, 21, '2024-01-21', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (22, 22, 22, '2024-01-22', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (23, 23, 23, '2024-01-23', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (24, 24, 24, '2024-01-24', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (25, 25, 25, '2024-01-25', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (26, 26, 26, '2024-01-26', 'В обработке');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (27, 27, 27, '2024-01-27', 'В обработке');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (28, 28, 28, '2024-01-28', 'В обработке');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (29, 29, 29, '2024-01-29', 'В обработке');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (30, 30, 30, '2024-01-30', 'В обработке');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (31, 31, 31, '2024-02-01', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (32, 32, 32, '2024-02-02', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (33, 33, 33, '2024-02-03', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (34, 34, 34, '2024-02-04', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (35, 35, 35, '2024-02-05', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (36, 36, 36, '2024-02-06', 'Ожидается');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (37, 37, 37, '2024-02-07', 'Ожидается');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (38, 38, 38, '2024-02-08', 'Ожидается');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (39, 39, 39, '2024-02-09', 'Ожидается');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (40, 40, 40, '2024-02-10', 'Ожидается');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (41, 41, 41, '2024-02-11', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (42, 42, 42, '2024-02-12', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (43, 43, 43, '2024-02-13', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (44, 44, 44, '2024-02-14', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (45, 45, 45, '2024-02-15', 'Завершена');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (46, 46, 46, '2024-02-16', 'В обработке');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (47, 47, 47, '2024-02-17', 'В обработке');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (48, 48, 48, '2024-02-18', 'В обработке');
+INSERT INTO public.deliveries (delivery_id, supplier_id, warehouse_id, delivery_date, status) VALUES (49, 49, 49, '2024-02-19', 'В обработке');
+--deliveryItems
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (1, 1, 1, 10, 35000.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (2, 2, 2, 5, 42000.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (3, 3, 3, 8, 60000.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (4, 4, 4, 12, 7000.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (5, 5, 5, 100, 60.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (6, 6, 6, 30, 400.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (7, 7, 7, 40, 350.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (8, 8, 8, 20, 2500.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (9, 9, 9, 15, 4500.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (10, 10, 10, 50, 300.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (11, 11, 11, 25, 800.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (12, 12, 12, 200, 150.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (13, 13, 13, 10, 5200.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (14, 14, 14, 40, 200.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (15, 15, 15, 30, 350.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (16, 16, 16, 60, 500.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (17, 17, 17, 15, 1200.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (18, 18, 18, 8, 900.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (19, 19, 19, 5, 15000.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (20, 20, 20, 10, 3000.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (21, 21, 21, 200, 200.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (22, 22, 22, 300, 50.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (23, 23, 23, 12, 2500.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (24, 24, 24, 20, 400.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (25, 25, 25, 15, 900.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (26, 26, 26, 6, 2000.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (27, 27, 27, 4, 3500.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (28, 28, 28, 500, 45.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (29, 29, 29, 800, 70.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (30, 30, 30, 60, 300.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (31, 31, 31, 10, 9000.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (32, 32, 32, 40, 600.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (33, 33, 33, 25, 500.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (34, 34, 34, 12, 6500.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (35, 35, 35, 8, 7200.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (36, 36, 36, 100, 120.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (37, 37, 37, 5, 11000.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (38, 38, 38, 10, 4500.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (39, 39, 39, 4, 13000.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (40, 40, 40, 6, 8500.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (41, 41, 41, 5, 14000.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (42, 42, 42, 40, 150.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (43, 43, 43, 6, 9000.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (44, 44, 44, 60, 50.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (45, 45, 45, 80, 120.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (46, 46, 46, 3, 18000.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (47, 47, 47, 4, 25000.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (48, 48, 48, 2, 40000.00);
+INSERT INTO public.delivery_items (delivery_item_id, delivery_id, product_id, quantity, purchase_price) VALUES (49, 49, 49, 10, 500.00);
+--stockBalance
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (1, 1, 1, 8);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (2, 2, 2, 4);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (3, 3, 3, 7);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (4, 4, 4, 10);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (5, 5, 5, 90);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (6, 6, 6, 25);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (7, 7, 7, 35);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (8, 8, 8, 18);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (9, 9, 9, 12);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (10, 10, 10, 45);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (11, 11, 11, 20);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (12, 12, 12, 180);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (13, 13, 13, 9);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (14, 14, 14, 35);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (15, 15, 15, 28);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (16, 16, 16, 55);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (17, 17, 17, 12);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (18, 18, 18, 7);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (19, 19, 19, 4);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (20, 20, 20, 8);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (21, 21, 21, 180);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (22, 22, 22, 250);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (23, 23, 23, 10);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (24, 24, 24, 18);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (25, 25, 25, 13);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (26, 26, 26, 5);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (27, 27, 27, 3);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (28, 28, 28, 450);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (29, 29, 29, 700);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (30, 30, 30, 50);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (31, 31, 31, 8);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (32, 32, 32, 35);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (33, 33, 33, 20);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (34, 34, 34, 9);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (35, 35, 35, 6);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (36, 36, 36, 80);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (37, 37, 37, 4);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (38, 38, 38, 8);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (39, 39, 39, 3);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (40, 40, 40, 5);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (41, 41, 41, 4);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (42, 42, 42, 35);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (43, 43, 43, 5);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (44, 44, 44, 55);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (45, 45, 45, 70);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (46, 46, 46, 2);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (47, 47, 47, 3);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (48, 48, 48, 1);
+INSERT INTO public.stock_balances (product_id, warehouse_id, zone_id, quantity) VALUES (49, 49, 49, 8);
+
+
+SELECT setval('warehouses_warehouse_id_seq', (SELECT MAX(warehouse_id) FROM warehouses));
+
+
